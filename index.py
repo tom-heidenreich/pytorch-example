@@ -5,13 +5,20 @@ import torch.optim as optim
 
 from torchvision import datasets, transforms
 
+import matplotlib.pyplot as plt
+
 from network import Net
 
-def train(model, train_loader, criterion, optimizer, device, epochs=1, log_interval=500):
+def train(model, train_loader, criterion, optimizer, device, epochs=1, log_rate=.05):
     model.train().to(device)
+
+    losses_per_epoch = []
+
     for epoch in range(epochs):
         total_loss = 0.0  # Accumulate total loss over the epoch
         total_batches = len(train_loader)  # Total number of batches
+
+        log_interval = int(total_batches * log_rate)
 
         progress_bar = tqdm(enumerate(train_loader), total=total_batches, desc=f"Epoch {epoch+1}/{epochs}")
 
@@ -44,9 +51,12 @@ def train(model, train_loader, criterion, optimizer, device, epochs=1, log_inter
 
         # Calculate average loss for the entire epoch
         avg_loss_epoch = total_loss / total_batches
+        losses_per_epoch.append(avg_loss_epoch)
 
         # Print average loss for the whole epoch
         print(f"Epoch [{epoch+1}/{epochs}] - Average Loss: {avg_loss_epoch:.4f}")
+
+    return losses_per_epoch
 
 def test(model, test_loader, device):
     model.eval().to(device)
@@ -74,6 +84,7 @@ transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1
 train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
 test_dataset = datasets.MNIST('./data', train=False, download=True, transform=transform)
 
+EPOCHS = 5
 BATCH_SIZE = 64
 LEARNING_RATE = 0.01
 MOMENTUM = 0.9
@@ -87,5 +98,14 @@ model = Net()
 criterion = nn.NLLLoss()  # Negative Log-Likelihood Loss
 optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
-train(model, train_loader, criterion, optimizer, epochs=5, device=device)  # Train for 5 epochs
+losses = train(model, train_loader, criterion, optimizer, epochs=EPOCHS, device=device)
 test(model, test_loader, device)
+
+# Plot the loss curve
+plt.figure(figsize=(10, EPOCHS))
+plt.plot(losses, label='Training Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Training Loss Curve')
+plt.legend()
+plt.show()
