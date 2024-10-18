@@ -1,3 +1,4 @@
+from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -6,11 +7,16 @@ from torchvision import datasets, transforms
 
 from network import Net
 
-def train(model, train_loader, criterion, optimizer, epochs=1):
+def train(model, train_loader, criterion, optimizer, epochs=1, log_interval=500):
     model.train()
     for epoch in range(epochs):
-        print(f"Epoch [{epoch+1}/{epochs}]")
-        for images, labels in train_loader:
+        total_loss = 0.0  # Accumulate total loss over the epoch
+        total_images = len(train_loader)  # Total number of batches (not images)
+
+        progress_bar = tqdm(enumerate(train_loader), total=total_images, desc=f"Epoch {epoch+1}/{epochs}")
+
+        avg_loss = 0
+        for i, (images, labels) in progress_bar:
 
             # Zero the gradients
             optimizer.zero_grad()
@@ -26,6 +32,20 @@ def train(model, train_loader, criterion, optimizer, epochs=1):
 
             # Update weights
             optimizer.step()
+
+            # Accumulate total loss
+            total_loss += loss.item()
+
+            progress_bar.set_postfix({"Avg. Loss": f"{avg_loss:.4f}", "Loss": f"{loss.item():.4f}"})
+
+            if (i+1) % log_interval == 0:
+                avg_loss = total_loss/(i+1)
+
+        # Calculate average loss for the entire epoch
+        avg_loss_epoch = total_loss / total_images
+
+        # Print average loss for the whole epoch
+        print(f"Epoch [{epoch+1}/{epochs}] - Average Loss: {avg_loss_epoch:.4f}")
 
 def test(model, test_loader):
     model.eval()
