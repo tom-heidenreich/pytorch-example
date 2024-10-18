@@ -3,3 +3,6 @@ data
 
 # cache
 __pycache__
+
+# trained model
+trained_model.pth

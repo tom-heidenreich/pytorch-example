@@ -73,6 +73,10 @@ def test(model, test_loader, device):
 
     print(f"Test Accuracy: {100 * correct / total:.2f}%")
 
+def save_model(model, file_path="trained_model.pth"):
+    torch.save(model.state_dict(), file_path)
+    print(f"Trained model saved to {file_path}")
+
 if torch.cuda.is_available():
     print("Found CUDA device")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -100,6 +104,8 @@ optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
 losses = train(model, train_loader, criterion, optimizer, epochs=EPOCHS, device=device)
 test(model, test_loader, device)
+
+save_model(model)
 
 # Plot the loss curve
 plt.figure(figsize=(10, EPOCHS))
