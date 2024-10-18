@@ -11,9 +11,9 @@ def train(model, train_loader, criterion, optimizer, device, epochs=1, log_inter
     model.train().to(device)
     for epoch in range(epochs):
         total_loss = 0.0  # Accumulate total loss over the epoch
-        total_images = len(train_loader)  # Total number of batches (not images)
+        total_batches = len(train_loader)  # Total number of batches
 
-        progress_bar = tqdm(enumerate(train_loader), total=total_images, desc=f"Epoch {epoch+1}/{epochs}")
+        progress_bar = tqdm(enumerate(train_loader), total=total_batches, desc=f"Epoch {epoch+1}/{epochs}")
 
         avg_loss = 0
         for i, (images, labels) in progress_bar:
@@ -43,7 +43,7 @@ def train(model, train_loader, criterion, optimizer, device, epochs=1, log_inter
                 avg_loss = total_loss/(i+1)
 
         # Calculate average loss for the entire epoch
-        avg_loss_epoch = total_loss / total_images
+        avg_loss_epoch = total_loss / total_batches
 
         # Print average loss for the whole epoch
         print(f"Epoch [{epoch+1}/{epochs}] - Average Loss: {avg_loss_epoch:.4f}")
@@ -74,14 +74,18 @@ transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1
 train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
 test_dataset = datasets.MNIST('./data', train=False, download=True, transform=transform)
 
+BATCH_SIZE = 64
+LEARNING_RATE = 0.01
+MOMENTUM = 0.9
+
 # Load the datasets into simple data loaders (no batching for now)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=1, shuffle=True)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 # Define the model, loss function, and optimizer
 model = Net()
 criterion = nn.NLLLoss()  # Negative Log-Likelihood Loss
-optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+optimizer = optim.SGD(model.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
 train(model, train_loader, criterion, optimizer, epochs=5, device=device)  # Train for 5 epochs
 test(model, test_loader, device)
